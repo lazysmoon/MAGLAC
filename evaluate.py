@@ -1,24 +1,17 @@
 import os
-import gymnasium as gym
 import numpy as np
 import jax
-import jax.numpy as jnp
 import argparse
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 from flax.training import checkpoints
-import functools as ft
 import jax.tree_util as jtu
-import jax.random as jr
-from maglac.utils.utils import jax_jit_np, tree_index, chunk_vmap, merge01, jax_vmap, tree_merge
-from maglac.rl_agent.data import Rollout
+from maglac.utils.utils import jax_jit_np, jax_vmap
 from maglac.custom_envs.base import RolloutResult
 from maglac.rl_agent.maglac import MAGLACAgent, rollout_single_episode, run_parallel_evaluation
 from maglac.custom_envs import make_env
-from maglac.custom_envs.plot import render_single_graph
 from tqdm import tqdm
-import sys, yaml, pickle
+import sys, yaml
 
 plt.rcParams['font.cursive'] = ['Comic Sans MS']
 # Prevent matplotlib from failing to find the 'cursive' font family
@@ -116,9 +109,13 @@ def test_model(args):
 
     best_success_rate = -0.1
     best_safe_rate = -0.1
-    if args.checkpoint_step is None:
+    selected_step = args.checkpoint_step
+    if selected_step is None:
         steps = available_steps(args.model_dir, prefix=prefix)
-        steps = [1700]
+        if not steps:
+            raise FileNotFoundError(f"No checkpoint found in directory: {args.model_dir}")
+        best_success_step = steps[0]
+        best_safe_step = steps[0]
         for step in steps:
             load_path = get_checkpoint_path_by_step(args.model_dir, prefix, step)
             if not load_path:
@@ -143,6 +140,7 @@ def test_model(args):
             if safe_rate > best_safe_rate:
                 best_safe_rate = safe_rate
                 best_safe_step = step
+        selected_step = best_success_step
         text = (
             f"best_success_rate:{best_success_rate*100}% with step {best_success_step}\n,"
             f"best_safe_rate:{best_safe_rate*100}% with step {best_safe_step}"
@@ -156,10 +154,7 @@ def test_model(args):
             file.writelines([text])
         print(f"Results successfully written to {prefix}of_allstep.txt")
 
-    if args.checkpoint_step is None:
-        load_path = get_checkpoint_path_by_step(args.model_dir, prefix, best_success_step)
-    else:
-        load_path = get_checkpoint_path_by_step(args.model_dir, prefix, args.checkpoint_step)
+    load_path = get_checkpoint_path_by_step(args.model_dir, prefix, selected_step)
     if not load_path:
         # Fall back to the latest checkpoint if the specific one is not found
         load_path = checkpoints.latest_checkpoint(ckpt_dir=args.model_dir, prefix=prefix)
@@ -243,7 +238,7 @@ def test_model(args):
     print("----------------------------------------------------")
     save_dir = os.path.join(
         args.model_dir,
-        f"eval_agent{args.num_agents}_obs{args.obs}_seed{args.seed}_{prefix}{args.checkpoint_step}",
+        f"eval_agent{args.num_agents}_obs{args.obs}_seed{args.seed}_{prefix}{selected_step}",
     )
     os.makedirs(save_dir, exist_ok=True)
     # Open the file and write contents (create it if it does not exist)
@@ -285,7 +280,7 @@ def main():
     parser.add_argument("--model_dir", type=str, default='./pretrain/MAGLAC/models', help="Directory where the trained models are saved.")
     parser.add_argument("--env", type=str, default='Second_Order', help="Name of the environment.")
     parser.add_argument("--prefix", type=str, default="checkpoint_", help="Name of the model.")
-    parser.add_argument("--checkpoint_step", type=str, default=0, help="Checkpoint step to load (None to scan all available steps).")
+    parser.add_argument("--checkpoint_step", type=int, default=None, help="Checkpoint step to load. Omit it to scan all available steps and pick the best.")
 
     # --- Evaluation arguments ---
     parser.add_argument("--seed", type=int, default=299, help="Random seed for evaluation.")

@@ -19,7 +19,7 @@ MAGLAC learns a **distributed, safe, and scalable control policy** for multi-age
 ```
 MAGLAC/
 ├── train.py                # Training entry point
-├── evalute.py              # Evaluation / rollout / video rendering
+├── evaluate.py             # Evaluation / rollout / video rendering
 ├── requirements.txt        # Python dependencies
 ├── maglac/
 │   ├── custom_envs/        # Multi-agent navigation environments + plotting
@@ -39,7 +39,7 @@ MAGLAC/
 
 ## Installation
 
-The code is built on **JAX / Flax** with `gymnasium` and `wandb`. A CUDA-enabled NVIDIA GPU is recommended.
+The code is built on **JAX / Flax** with  `wandb`. A CUDA-enabled NVIDIA GPU is recommended.
 
 ```bash
 # 1. clone
@@ -66,7 +66,7 @@ The default configuration trains with `N = 8` agents, `O = 8` obstacles in a 4 m
 
 ```bash
 python train.py \
-    --env DoubleIntegrator \
+    --env Second_Order \
     --rl_algo MAGLAC \
     --num-agents 8 \
     --obs 8 \
@@ -85,17 +85,16 @@ Add `--debug` to disable `wandb` and JAX JIT for quick local debugging. See `tra
 ### 2. Evaluate a trained policy
 
 ```bash
-python evalute.py \
+python evaluate.py \
     --model_dir ./pretrain/MAGLAC/models \
     --prefix checkpoint_ \
-    --checkpoint_step 0 \
     --num-agents 8 \
     --obs 8 \
     --area-size 4 \
-    --epi 100 \
+    --epi 100
 ```
 
-The script loads the checkpoint at the requested step (set `--checkpoint_step None` to automatically scan all available steps and pick the best), runs `--epi` rollouts, and writes:
+The script loads the checkpoint at the requested step. Omit `--checkpoint_step` to automatically scan all available steps and pick the best, or pass a specific integer step. It then runs `--epi` rollouts and writes:
 
 - `output_seed<seed>.txt` — mean return, success rate, safe rate, failed episode indices,
 - one MP4 video and one trajectory PNG per selected episode.
@@ -104,7 +103,7 @@ A pretrained checkpoint is provided under `pretrain/MAGLAC/` for direct evaluati
 
 ### 3. Render a single graph / trajectory
 
-`maglac/custom_envs/plot.py` exposes three rendering helpers used by `evalute.py`:
+`maglac/custom_envs/plot.py` exposes three rendering helpers used by `evaluate.py`:
 
 - `render_single_graph(graph, save_path, side_length, n_agent, n_rays, r)` — static figure of one frame (agents as circles, goals as squares, obstacles, observation edges).
 - `render_trajectory(rollout, save_path, side_length, dim, n_agent, r)` — continuous time-graded trajectory plot with a colorbar.
@@ -165,3 +164,7 @@ In every scenario, all eight quadrotors reach their assigned goals without colli
 ## Contact
 
 Issues and pull requests are very welcome.
+
+## License
+
+This project is released under the MIT License. See [LICENSE](LICENSE).

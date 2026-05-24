@@ -1,6 +1,6 @@
-from flax import core, struct
+from flax import core
 from jaxtyping import Array, Bool, Float, Int, Shaped
-from typing import Dict, TypeVar, Any, List
+from typing import Dict, TypeVar, Any
 from numpy import ndarray
 
 

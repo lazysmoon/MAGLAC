@@ -1,22 +1,17 @@
 import argparse
 import datetime
 import os
-import ipdb
 import numpy as np
 import wandb
 import yaml
-import jax
 import sys
 from maglac.custom_envs import make_env
 from maglac.utils.utils import is_connected
 from maglac.rl_agent import make_agent
-import gymnasium as gym
-from maglac.rl_agent.replay_buffer import ReplayBuffer, PyTreeReplayBuffer
 from maglac.rl_agent.maglac import MAGLAC_Trainer
 
 def load_config(args) -> tuple[dict]:
     env_params={
-            'collision_penalty': args.collision_penalty,
             'success_reward': args.success_reward,
             'reach_reward': args.reach_reward,
             'correction_cost_dist': args.correction_cost_dist,
@@ -148,23 +143,14 @@ def train(args):
         'env_params': env_params
     }
 
-    if not args.debug or 0:
-        # Ensure the final log directory is created
+    if not args.debug:
         os.makedirs(log_dir, exist_ok=True) 
-        
-        # Define the path for the yaml file to be saved
         config_path = os.path.join(log_dir, 'config.yaml')
-
-        # Write the integrated configuration to the yaml file
         with open(config_path, 'w') as f:
             yaml.dump(full_config, f, indent=4)
-        
         print(f"Hyperparameters saved to {config_path}")
-        
-    # save config
+
     wandb.config.update(args)
-    
-    # start training
     trainer.train()
 
 def is_debug_mode():
@@ -178,7 +164,7 @@ def main():
     parser.add_argument("-n", "--num-agents", type=int, default=8)
     parser.add_argument("--obs", type=int, default=8)
     parser.add_argument("--rl_algo", type=str, default="MAGLAC")
-    parser.add_argument("--env", type=str, default="DoubleIntegrator")
+    parser.add_argument("--env", type=str, default="Second_Order")
     parser.add_argument("--seed", type=int, default=2)
     parser.add_argument("--steps", type=int, default=1000)
     parser.add_argument("--name", type=str, default=None)
@@ -213,7 +199,7 @@ def main():
     parser.add_argument("--alpha_lr", type=float, default=3e-4)
     parser.add_argument("--gamma", type=float, default=0.99)
     parser.add_argument("--tau", type=float, default=0.005)
-    parser.add_argument("--hidden_dims", type=str, default="(256, 256)",
+    parser.add_argument("--hidden_dims", type=str, default=(256, 256),
                     help="Hidden layer dimensions, format is '(dim1, dim2, ...)'")
     parser.add_argument("--batch_size", type=int, default=256)
     parser.add_argument("--lyapunov_loss_coeff", type=float, default=0.4)
@@ -232,5 +218,4 @@ def main():
     train(args)
 
 if __name__ == "__main__":
-    with ipdb.launch_ipdb_on_exception():
-        main()
+    main()

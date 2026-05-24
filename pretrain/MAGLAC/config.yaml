@@ -4,7 +4,6 @@ command_line_args:
     alpha_lr: 0.0003
     area_size: 4
     batch_size: 256
-    collision_penalty: -200
     correction_cost_dist: 0.05
     cost: 10
     cost_agent_dist: 4

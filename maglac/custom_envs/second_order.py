@@ -4,17 +4,14 @@ import jax
 import jax.numpy as jnp
 import jax.random as jr
 import numpy as np
-
 from typing import NamedTuple, Tuple, Optional
-
 from ..utils.graph import EdgeBlock, GetGraph, GraphsTuple
 from ..utils.typing import Action, AgentState, Array, Cost, Done, Info, Reward, State
 from ..utils.utils import merge01, jax_vmap
 from .base import MultiAgentEnv, RolloutResult
 from .obstacle import Obstacle, Rectangle
-from .plot import render_video, render_trajectory, render_single_graph
+from .plot import render_video, render_trajectory
 from .utils import get_lidar, inside_obstacles, lqr, get_node_goal_rng
-import pickle
 
 class Second_Order(MultiAgentEnv):
     AGENT = 0

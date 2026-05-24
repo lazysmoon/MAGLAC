@@ -1,44 +1,5 @@
-# replay_buffer.py
 import numpy as np
 import jax.tree_util as jtu
-from collections import deque
-import random
-from .utils import jax2np, np2jax
-from ..utils.utils import tree_merge
-from .data import Rollout
-from maglac.utils.utils import merge01
-
-class ReplayBuffer:
-    def __init__(self, state_dim: int, action_dim: int, capacity: int):
-        self._size = capacity
-        self._buffer = None # Still a PyTree
-
-    def add(self, rollout: Rollout):
-        if self._buffer is None:
-            self._buffer = jax2np(rollout)
-        else:
-            self._buffer = tree_merge([self._buffer, jax2np(rollout)])
-        if self._buffer.length > self._size:
-            self._buffer = jtu.tree_map(lambda x: x[-self._size:], self._buffer)
-
-    def sample(self, batch_size: int) -> Rollout:
-        rollout = jtu.tree_map(lambda x: merge01(x), self._buffer)
-        idx = np.random.randint(0, self.length, batch_size)
-        rollout_batch = jtu.tree_map(lambda x: x[idx], rollout)
-        return rollout_batch
-
-    def get_data(self, idx: np.ndarray) -> Rollout:
-        return jtu.tree_map(lambda x: x[idx], self._buffer)
-    
-    def __len__(self):
-        return len(self.buffer)
-        
-    @property
-    def length(self) -> int:
-        if self._buffer is None:
-            return 0
-        return self._buffer.n_data
-
 
 class PyTreeReplayBuffer:
     """

@@ -6,29 +6,18 @@ import jax.numpy as jnp
 import jax.tree_util as jtu
 import matplotlib.collections as mcollections
 import numpy as np
-import functools as ft
-
 from datetime import timedelta
-from typing import Any, Callable, Iterable, ParamSpec, Sequence, TypeVar, Tuple, List, NamedTuple
-
+from typing import Any, Callable, Iterable, ParamSpec, Sequence, TypeVar, List, NamedTuple
 from jax import numpy as jnp, tree_util as jtu
 from jax._src.lib import xla_client as xc
 from matplotlib.animation import FuncAnimation
 from rich.progress import Progress, ProgressColumn
 from rich.text import Text
-from .typing import Array
 import socket
-import jax.numpy as jnp
-import jax.tree_util as jtu
-
-import matplotlib.pyplot as plt
-import seaborn as sns
 import optax
-import tracemalloc
-from typing import Callable, TYPE_CHECKING
+from typing import Callable
 from matplotlib.colors import CenteredNorm
 
-from ..utils.typing import PRNGKey
 
 
 def has_nan(x):
@@ -226,10 +215,6 @@ def save_anim(ani: FuncAnimation, path: pathlib.Path):
 def tree_merge(data: List[NamedTuple]):
     def body(*x):
         x = list(x)
-        # 检查第一个元素是否是标量 (0维数组)
-        # if isinstance(x[0], np.ndarray) and x[0].ndim == 0:
-        #     # 如果是标量，使用 np.stack 将它们堆叠成一个新的一维数组
-        #     return np.stack(x, axis=0)
         if isinstance(x[0], np.ndarray):
             return np.concatenate(x, axis=0)
         else:

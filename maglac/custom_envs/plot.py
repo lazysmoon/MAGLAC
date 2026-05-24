@@ -2,94 +2,17 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import pathlib
-
 from colour import hsl2hex
 from matplotlib.animation import FuncAnimation
 from matplotlib.collections import LineCollection, PatchCollection
-from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.pyplot import Axes
 from matplotlib.patches import Polygon, Circle
 from mpl_toolkits.mplot3d import proj3d, Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
-
-from ..utils.utils import centered_norm
-from ..utils.typing import EdgeIndex, Pos2d, Pos3d, Array
 from ..utils.utils import merge01, tree_index, MutablePatchCollection, save_anim
 from .obstacle import Cuboid, Sphere, Obstacle, Rectangle
 from .base import RolloutResult
-import matplotlib.colors as mcolors
 from matplotlib.colors import Normalize
-
-def render_single_graph(
-        graph,
-        save_path,
-        side_length: float,
-        n_agent: int,
-        n_rays: int,
-        r: float,
-        dim: int = 2,
-        dpi: int = 150,
-        show_edges: bool = True,
-):
-    fig, ax = plt.subplots(figsize=(6, 6), dpi=dpi)
-    ax.set_xlim(0., side_length)
-    ax.set_ylim(0., side_length)
-    ax.set_aspect("equal")
-    plt.axis("off")
-
-    agent_color = "#0068ff"
-    goal_color = "#2fdd00"
-    obs_color = "#404040"
-
-    # obstacles
-    obs = graph.env_states.obstacle
-    ax.add_collection(get_obs_collection(obs, obs_color, alpha=0.8))
-
-    # agents and goals
-    n_pos = np.array(graph.states[:n_agent * 2, :dim])
-    patches = []
-    for ii in range(n_agent * 2):
-        color = agent_color if ii < n_agent else goal_color
-        if ii < n_agent:
-            p = plt.Circle((float(n_pos[ii, 0]), float(n_pos[ii, 1])), r, color=color, linewidth=0.)
-        else:
-            p = plt.Rectangle(
-                (float(n_pos[ii, 0]) - r, float(n_pos[ii, 1]) - r),
-                2 * r, 2 * r, color=color, linewidth=0.
-            )
-        patches.append(p)
-    ax.add_collection(MutablePatchCollection(list(reversed(patches)), match_original=True, zorder=6))
-
-    # edges
-    if show_edges:
-        # Use the true size of graph.states instead of manually computing the pad index
-        n_total_nodes = graph.states.shape[0]
-        all_pos = np.array(graph.states[:, :dim])  # positions of all nodes
-
-        senders = np.array(graph.senders)
-        receivers = np.array(graph.receivers)
-        edge_index = np.stack([senders, receivers], axis=0)
-
-        # Filter out-of-range edges (pad node indices >= n_total_nodes)
-        is_valid = (edge_index[0] < n_total_nodes) & (edge_index[1] < n_total_nodes)
-        ei = edge_index[:, is_valid]
-
-        if ei.shape[1] > 0:
-            lines = np.stack([all_pos[ei[0]], all_pos[ei[1]]], axis=1)
-
-            # Goal edges: sender index in [n_agent, n_agent*2)
-            is_goal = (senders[is_valid] >= n_agent) & (senders[is_valid] < n_agent * 2)
-            colors = [goal_color if is_goal[i] else "0.3" for i in range(len(lines))]
-
-            ax.add_collection(LineCollection(
-                lines, colors=colors, linewidths=1.5, alpha=0.5, zorder=3
-            ))
-
-    plt.tight_layout()
-    plt.savefig(save_path, bbox_inches='tight', dpi=dpi)
-    print(f"Saved -> {save_path}")
-    plt.close(fig)
-
 
 def get_obs_collection(
         obstacles: Obstacle, color: str, alpha: float
@@ -365,10 +288,6 @@ def render_trajectory(
         # Use the full data (no subsampling) to keep the line smooth.
         full_traj = all_positions[:, i, :]
 
-        # --- Build line segments ---
-        # LineCollection expects a sequence of segments:
-        # [(x0, y0), (x1, y1)], [(x1, y1), (x2, y2)], ...
-        # points shape: (T, 1, 2)
         points = full_traj.reshape(-1, 1, 2)
         # segments shape: (T-1, 2, 2)
         segments = np.concatenate([points[:-1], points[1:]], axis=1)
@@ -384,10 +303,7 @@ def render_trajectory(
         # Line styling
         lc.set_linewidth(2.0)
         lc.set_alpha(0.9)
-        # z-order: putting trajectories under the obstacles (10) tends to give a nicer
-        # "weaving" look, but flip this if you want them on top.
         lc.set_zorder(5)
-
         ax.add_collection(lc)
 
         # --- Start and end markers ---

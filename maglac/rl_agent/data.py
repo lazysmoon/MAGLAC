@@ -1,6 +1,5 @@
 from typing import NamedTuple
 
-from ..utils.typing import Array
 from ..utils.typing import Action, Reward, Cost, Done
 from ..utils.graph import GraphsTuple
 

@@ -2,7 +2,7 @@ import flax.linen as nn
 import jax.numpy as jnp
 
 from typing import Any, Callable, Literal, Sequence, Iterable, Generator, TypeVar
-from jaxtyping import Array, Bool, Float, Int, Shaped
+from jaxtyping import Array, Float
 
 
 ActFn = Callable[[Array], Array]
