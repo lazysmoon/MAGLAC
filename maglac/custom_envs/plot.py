@@ -418,4 +418,4 @@ def render_trajectory(
     print(f"Saving continuous trajectory plot to {save_path}")
     plt.savefig(save_path)
     plt.savefig(save_path.replace('.png', '.pdf'), bbox_inches='tight', dpi=300)
-    plt.close(fig)
+    plt.close(fig)    
